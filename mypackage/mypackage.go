@@ -3,31 +3,19 @@ package mypackage
 import (
 	"context"
 	"fmt"
-	"io"
-	"os"
+
+	"github.com/pspencer-arculus/xgo-bug-demo/mypackage/myclient"
+	"github.com/pspencer-arculus/xgo-bug-demo/tasker"
 )
 
-type Client struct {
-	url string
-}
-
-type Tasker[T any] struct {
-	Client T
-	F      func(context.Context, T) error
-}
-
-var MyTasker = Tasker[io.Writer]{
-	Client: os.Stdout,
-	F: func(ctx context.Context, w io.Writer) error {
-		_, err := fmt.Fprintln(w, "task called")
-		return err
+var MyTasker = tasker.Tasker[myclient.Client]{
+	Client: myclient.Client{URL: "https://example.com"},
+	F: func(ctx context.Context, client myclient.Client) error {
+		fmt.Printf("task called: %s", client.URL)
+		return nil
 	},
 }
 
 func DoTask(ctx context.Context) error {
-	return MyTasker.F(ctx, MyTasker.Client)
-}
-
-func (t Tasker[T]) Do(ctx context.Context) error {
-	return t.F(ctx, t.Client)
+	return MyTasker.Do(ctx)
 }
